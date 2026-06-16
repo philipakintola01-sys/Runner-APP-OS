@@ -1,0 +1,1 @@
+- [Expo workflow startup fix](expo-workflow-startup.md) — remove `router = "expo-domain"` from artifact.toml; it makes restart_workflow check an unreachable external URL instead of localhost.

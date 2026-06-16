@@ -1,0 +1,366 @@
+You are a senior mobile architect, product designer, UX researcher, endurance athlete, data analyst, and full-stack engineer.
+
+Your task is to design and build a production-quality mobile application called RunOS.
+
+Do not build a demo.
+Do not build placeholder screens.
+Do not generate fake functionality.
+Do not use dummy data except where explicitly required during development.
+
+Think deeply before implementation.
+
+=================================================
+PRODUCT VISION
+=================================================
+
+RunOS is an offline-first running operating system designed for students, amateur runners, endurance athletes, and marathon enthusiasts.
+
+The app should help runners:
+
+1. Track runs accurately.
+2. Understand performance trends.
+3. Compare current performance against previous runs.
+4. Maintain consistency through streaks and goals.
+5. Generate beautiful shareable run cards for social media.
+6. Operate reliably even without internet access.
+
+The philosophy is:
+
+"Track. Understand. Improve. Share."
+
+The experience should feel focused, modern, data-rich, and athlete-centric.
+
+=================================================
+TARGET USER
+=================================================
+
+Primary User:
+
+- Student
+- Runs frequently
+- Trains indoors and outdoors
+- Wants meaningful analytics
+- Wants visual progress
+- Wants to share achievements
+- Often has inconsistent internet access
+
+The app should prioritize simplicity over feature bloat.
+
+=================================================
+CORE PRINCIPLES
+=================================================
+
+1. Offline-first.
+
+The app must continue functioning without internet.
+
+Users should always be able to:
+
+- start run
+- stop run
+- view history
+- view analytics
+- generate run cards
+
+while offline.
+
+Data syncs automatically when internet becomes available.
+
+-------------------------------------------------
+
+2. Fast launch.
+
+User should be able to begin a run within 2 taps.
+
+-------------------------------------------------
+
+3. Performance over aesthetics.
+
+Accurate tracking is more important than visual effects.
+
+-------------------------------------------------
+
+4. Data should produce insight.
+
+Never show numbers without interpretation.
+
+Bad:
+
+"You ran 5km."
+
+Good:
+
+"You ran 5km 8% faster than your average pace over the last 5 runs."
+
+=================================================
+TECH STACK
+=================================================
+
+Frontend:
+Flutter
+
+Backend:
+Supabase
+
+Authentication:
+Supabase Auth
+
+Database:
+PostgreSQL via Supabase
+
+Offline Storage:
+SQLite
+
+Maps:
+OpenStreetMap
+
+State Management:
+Recommend best architecture and justify choice.
+
+Architecture:
+Clean Architecture
+Feature-based modular structure
+Scalable for future expansion
+
+=================================================
+MVP FEATURES
+=================================================
+
+FEATURE 1
+RUN TRACKING
+
+User can:
+
+- Start run
+- Pause run
+- Resume run
+- End run
+
+Track:
+
+- Distance
+- Duration
+- Average pace
+- Current pace
+- Calories estimate
+- Route
+- GPS coordinates
+- Elevation gain/loss if available
+
+At run completion save:
+
+- Timestamp
+- Route
+- Pace
+- Distance
+- Duration
+- Weather if internet available
+
+=================================================
+FEATURE 2
+RUN HISTORY
+
+Display:
+
+- All runs
+- Filter by:
+  - week
+  - month
+  - year
+
+Each run should display:
+
+- distance
+- duration
+- pace
+- date
+
+=================================================
+FEATURE 3
+ANALYTICS ENGINE
+
+Generate meaningful insights.
+
+Examples:
+
+"Your pace improved by 4.2% compared to last week."
+
+"This is your longest run in 32 days."
+
+"You have maintained a 7-day running streak."
+
+"You slowed significantly after kilometer 4."
+
+Analytics should include:
+
+- weekly totals
+- monthly totals
+- average pace
+- best pace
+- longest run
+- streaks
+- consistency score
+
+Design an extensible analytics system.
+
+=================================================
+FEATURE 4
+GOALS
+
+User can set goals:
+
+- distance goal
+- weekly goal
+- monthly goal
+- annual goal
+
+Examples:
+
+Run 20km per week.
+
+Run 500km this year.
+
+Track progress visually.
+
+=================================================
+FEATURE 5
+SOCIAL RUN CARDS
+
+This is a major feature.
+
+After completing a run:
+
+User can:
+
+1. Take a photo.
+2. Upload existing photo.
+3. Generate share card.
+
+Card automatically overlays:
+
+- distance
+- time
+- pace
+- date
+- streak
+- achievement badges
+
+Provide multiple templates.
+
+Templates should look premium enough for:
+
+- Instagram
+- Threads
+- X
+- WhatsApp Status
+
+Export image in high quality.
+
+=================================================
+FEATURE 6
+DASHBOARD
+
+Home dashboard should show:
+
+Today's status
+
+Current streak
+
+Weekly distance
+
+Monthly distance
+
+Recent runs
+
+AI-generated insights
+
+Goal progress
+
+=================================================
+ADVANCED ANALYTICS
+
+Build architecture that can later support:
+
+- VO2 max estimation
+- fatigue detection
+- recovery recommendations
+- race prediction
+- AI coach
+- training plans
+
+Do not implement fully now.
+
+Design for future support.
+
+=================================================
+UX REQUIREMENTS
+=================================================
+
+The user journey should be:
+
+Open App
+→ Start Run
+→ Run
+→ End Run
+→ View Insight
+→ Generate Share Card
+
+Everything else is secondary.
+
+Avoid unnecessary screens.
+
+Avoid clutter.
+
+Avoid gamification overload.
+
+=================================================
+DESIGN LANGUAGE
+=================================================
+
+Modern
+Athletic
+Clean
+Data-centric
+
+Think:
+
+Strava
+Nike Run Club
+
+but simpler and more insight-focused.
+
+Use:
+
+- strong typography
+- card layouts
+- clear metrics
+- excellent readability outdoors
+
+Support dark mode and light mode.
+
+=================================================
+DELIVERABLES
+=================================================
+
+Produce:
+
+1. Full system architecture.
+2. Database schema.
+3. Folder structure.
+4. API design.
+5. UI/UX flow.
+6. Flutter implementation.
+7. Supabase implementation.
+8. Analytics engine implementation.
+9. Social card generation engine.
+10. Offline synchronization architecture.
+
+Before coding:
+
+Present architecture and implementation plan.
+
+Identify risks.
+
+Identify tradeoffs.
+
+Then proceed with implementation.
