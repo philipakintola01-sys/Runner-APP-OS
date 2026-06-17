@@ -1,8 +1,9 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Platform,
   Pressable,
@@ -14,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ShareCardGenerator, ShareCardTemplate, TemplateSelector } from "@/components/ShareCardGenerator";
 import { useRunStore } from "@/context/RunStore";
 import { useColors } from "@/hooks/useColors";
 import {
@@ -37,6 +39,9 @@ export default function RunCompleteScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
+  const [selectedTemplate, setSelectedTemplate] = useState<ShareCardTemplate>("athletic");
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+
   const run = useMemo(() => runs.find((r) => r.id === runId), [runs, runId]);
 
   const extras = useMemo(() => {
@@ -47,6 +52,37 @@ export default function RunCompleteScreen() {
     const insights = generateInsights(runs);
     return { streak, isPR, insights };
   }, [runs, run]);
+
+  async function pickPhoto() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+  }
+
+  async function takePhoto() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== "granted") return;
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+  }
 
   async function handleShare() {
     if (!run) return;
@@ -89,55 +125,41 @@ export default function RunCompleteScreen() {
       </View>
 
       {/* Share Card */}
-      <LinearGradient
-        colors={["#1A1A26", "#0F0F1A", "#1A0A0A"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.shareCard}
-      >
-        <View style={styles.shareCardHeader}>
-          <Text style={styles.shareCardBrand}>RUN OS</Text>
-          <Text style={styles.shareCardDate}>{formatDate(run.startTime)}</Text>
-        </View>
+      <ShareCardGenerator
+        data={{
+          distance: run.distance,
+          duration: run.duration,
+          avgPace: run.avgPace,
+          calories: run.calories,
+          steps: run.steps,
+          startTime: run.startTime,
+          streak: extras.streak,
+          isPR: extras.isPR,
+        }}
+        imageUri={photoUri}
+        selectedTemplate={selectedTemplate}
+      />
 
-        <View style={styles.shareCardDist}>
-          <Text style={styles.shareCardDistVal}>{(run.distance / 1000).toFixed(2)}</Text>
-          <Text style={styles.shareCardDistUnit}>KILOMETERS</Text>
-        </View>
+      {/* Template Selector */}
+      <TemplateSelector selected={selectedTemplate} onSelect={setSelectedTemplate} />
 
-        <View style={styles.shareCardStats}>
-          <View style={styles.shareCardStat}>
-            <Text style={styles.shareCardStatVal}>{formatDuration(run.duration)}</Text>
-            <Text style={styles.shareCardStatLabel}>TIME</Text>
-          </View>
-          <View style={[styles.shareCardDivider]} />
-          <View style={styles.shareCardStat}>
-            <Text style={styles.shareCardStatVal}>{formatPace(run.avgPace)}</Text>
-            <Text style={styles.shareCardStatLabel}>PACE /KM</Text>
-          </View>
-          <View style={[styles.shareCardDivider]} />
-          <View style={styles.shareCardStat}>
-            <Text style={styles.shareCardStatVal}>{run.calories}</Text>
-            <Text style={styles.shareCardStatLabel}>KCAL</Text>
-          </View>
-        </View>
-
-        {run.steps && (
-          <View style={styles.shareCardSteps}>
-            <Feather name="hash" size={14} color="#00C9A7" />
-            <Text style={styles.shareCardStepsText}>{run.steps.toLocaleString()} steps</Text>
-          </View>
+      {/* Photo Actions */}
+      <View style={styles.photoActions}>
+        <Pressable style={[styles.photoBtn, { backgroundColor: colors.card }]} onPress={takePhoto}>
+          <Feather name="camera" size={18} color={colors.foreground} />
+          <Text style={[styles.photoBtnText, { color: colors.foreground }]}>Take Photo</Text>
+        </Pressable>
+        <Pressable style={[styles.photoBtn, { backgroundColor: colors.card }]} onPress={pickPhoto}>
+          <Feather name="image" size={18} color={colors.foreground} />
+          <Text style={[styles.photoBtnText, { color: colors.foreground }]}>Add Photo</Text>
+        </Pressable>
+        {photoUri && (
+          <Pressable style={[styles.photoBtn, { backgroundColor: colors.destructive + "15" }]} onPress={() => setPhotoUri(null)}>
+            <Feather name="x" size={18} color={colors.destructive} />
+            <Text style={[styles.photoBtnText, { color: colors.destructive }]}>Remove</Text>
+          </Pressable>
         )}
-
-        {extras.streak > 0 && (
-          <View style={styles.shareCardStreak}>
-            <Feather name="zap" size={14} color="#FF4B2B" />
-            <Text style={styles.shareCardStreakText}>
-              {extras.streak}-day streak
-            </Text>
-          </View>
-        )}
-      </LinearGradient>
+      </View>
 
       {/* Insights */}
       {extras.insights.length > 0 && (
@@ -207,22 +229,6 @@ const makeStyles = (colors: ReturnType<typeof import("@/hooks/useColors").useCol
     headerTitle: { fontSize: 28, fontWeight: "800" as const, letterSpacing: -0.5 },
     prBadge: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, alignSelf: "flex-start" as const },
     prBadgeText: { fontSize: 13, fontWeight: "700" as const },
-    shareCard: { marginHorizontal: 16, borderRadius: 20, padding: 24, marginBottom: 20 },
-    shareCardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
-    shareCardBrand: { fontSize: 14, color: "#FF4B2B", fontWeight: "800" as const, letterSpacing: 2 },
-    shareCardDate: { fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: "500" as const },
-    shareCardDist: { marginBottom: 20 },
-    shareCardDistVal: { fontSize: 64, fontWeight: "900" as const, color: "#FFFFFF", letterSpacing: -2, lineHeight: 72 },
-    shareCardDistUnit: { fontSize: 12, color: "rgba(255,255,255,0.4)", letterSpacing: 2, marginTop: 4 },
-    shareCardStats: { flexDirection: "row", alignItems: "center", marginBottom: 16 },
-    shareCardStat: { flex: 1, alignItems: "center" },
-    shareCardStatVal: { fontSize: 18, fontWeight: "800" as const, color: "#FFFFFF", letterSpacing: -0.3 },
-    shareCardStatLabel: { fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, marginTop: 4 },
-    shareCardDivider: { width: 1, height: 32, backgroundColor: "rgba(255,255,255,0.1)" },
-    shareCardSteps: { flexDirection: "row", alignItems: "center", gap: 6, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.08)", paddingTop: 12, marginBottom: 8 },
-    shareCardStepsText: { fontSize: 13, color: "#00C9A7", fontWeight: "700" as const },
-    shareCardStreak: { flexDirection: "row", alignItems: "center", gap: 6, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.08)", paddingTop: 14 },
-    shareCardStreakText: { fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: "600" as const },
     section: { paddingHorizontal: 16, marginBottom: 16 },
     sectionTitle: { fontSize: 18, fontWeight: "700" as const, marginBottom: 12 },
     insightCard: { flexDirection: "row", alignItems: "flex-start", borderRadius: colors.radius, padding: 14, marginBottom: 8, gap: 10 },
@@ -234,6 +240,9 @@ const makeStyles = (colors: ReturnType<typeof import("@/hooks/useColors").useCol
     detailLabel: { fontSize: 14 },
     detailValue: { fontSize: 15, fontWeight: "700" as const },
     detailDivider: { height: 1, marginHorizontal: 16 },
+    photoActions: { flexDirection: "row", paddingHorizontal: 16, gap: 8, marginBottom: 16 },
+    photoBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, borderRadius: 12, paddingVertical: 12 },
+    photoBtnText: { fontSize: 13, fontWeight: "600" as const },
     actions: { flexDirection: "row", paddingHorizontal: 16, gap: 12 },
     shareBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 14, paddingVertical: 16 },
     shareBtnText: { fontSize: 15, fontWeight: "700" as const },
