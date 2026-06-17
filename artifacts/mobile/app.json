@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "RunOS",
-    "slug": "runnerarc",
+    "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "runnerarc",
+    "scheme": "mobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
