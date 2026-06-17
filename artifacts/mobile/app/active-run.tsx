@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
+import { Pedometer } from "expo-sensors";
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -36,6 +37,8 @@ export default function ActiveRunScreen() {
   const [displaySeconds, setDisplaySeconds] = useState(0);
   const [displayDistance, setDisplayDistance] = useState(0);
   const [gpsActive, setGpsActive] = useState(false);
+  const [stepCount, setStepCount] = useState(0);
+  const [stepsAvailable, setStepsAvailable] = useState(false);
 
   const startTimeRef = useRef<number>(Date.now());
   const elapsedOnPauseRef = useRef<number>(0);
@@ -45,6 +48,8 @@ export default function ActiveRunScreen() {
   const coordsRef = useRef<Coordinate[]>([]);
   const distanceRef = useRef<number>(0);
   const isPausedRef = useRef(false);
+  const stepsAtStartRef = useRef<number>(0);
+  const pedometerSubRef = useRef<any>(null);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -110,13 +115,46 @@ export default function ActiveRunScreen() {
     }
   }, []);
 
+  // Pedometer
+  const startPedometer = useCallback(async () => {
+    if (Platform.OS === "web") return;
+    try {
+      const isAvailable = await Pedometer.isAvailableAsync();
+      if (!isAvailable) {
+        setStepsAvailable(false);
+        return;
+      }
+      setStepsAvailable(true);
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      const result = await Pedometer.getStepCountAsync(start, end);
+      stepsAtStartRef.current = result?.steps ?? 0;
+
+      pedometerSubRef.current = Pedometer.watchStepCount((result) => {
+        setStepCount(Math.max(0, result.steps - stepsAtStartRef.current));
+      });
+    } catch {
+      setStepsAvailable(false);
+    }
+  }, []);
+
+  const stopPedometer = useCallback(() => {
+    if (pedometerSubRef.current) {
+      pedometerSubRef.current.remove();
+      pedometerSubRef.current = null;
+    }
+  }, []);
+
   // Start on mount
   useEffect(() => {
     startTimer();
     startTracking();
+    startPedometer();
     return () => {
       clearTimer();
       stopTracking();
+      stopPedometer();
     };
   }, []);
 
@@ -126,6 +164,7 @@ export default function ActiveRunScreen() {
     elapsedOnPauseRef.current = displaySeconds;
     clearTimer();
     stopTracking();
+    stopPedometer();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   }
 
@@ -134,6 +173,7 @@ export default function ActiveRunScreen() {
     setIsPaused(false);
     startTimer();
     startTracking();
+    startPedometer();
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   }
 
@@ -146,10 +186,12 @@ export default function ActiveRunScreen() {
         onPress: async () => {
           clearTimer();
           stopTracking();
+          stopPedometer();
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
           const duration = displaySeconds;
           const distance = distanceRef.current;
+          const steps = stepCount > 0 ? stepCount : Math.round(distance / 1.4);
 
           if (duration < 5) {
             router.back();
@@ -167,6 +209,7 @@ export default function ActiveRunScreen() {
             calories: estimateCalories(distance),
             coordinates: coordsRef.current,
             elevationGain: 0,
+            steps,
           };
 
           await addRun(run);
@@ -185,6 +228,7 @@ export default function ActiveRunScreen() {
         onPress: () => {
           clearTimer();
           stopTracking();
+          stopPedometer();
           router.back();
         },
       },
@@ -233,6 +277,17 @@ export default function ActiveRunScreen() {
           <Text style={styles.secondaryLabel}>KCAL</Text>
         </View>
       </View>
+
+      {/* Steps */}
+      {stepsAvailable && (
+        <View style={styles.stepRow}>
+          <View style={styles.stepBox}>
+            <Feather name="hash" size={14} color="rgba(255,255,255,0.4)" />
+            <Text style={styles.stepVal}>{stepCount.toLocaleString()}</Text>
+            <Text style={styles.stepLabel}>STEPS</Text>
+          </View>
+        </View>
+      )}
 
       {/* Controls */}
       <View style={styles.controls}>
@@ -286,10 +341,14 @@ const makeStyles = (colors: ReturnType<typeof import("@/hooks/useColors").useCol
     primaryMetric: { alignItems: "center", marginVertical: 24 },
     primaryVal: { fontSize: 80, fontWeight: "900" as const, color: "#FF4B2B", letterSpacing: -2, lineHeight: 88 },
     primaryUnit: { fontSize: 16, color: "rgba(255,255,255,0.5)", letterSpacing: 2, fontWeight: "600" as const },
-    secondaryRow: { flexDirection: "row", marginHorizontal: 24, gap: 12, marginBottom: 40 },
+    secondaryRow: { flexDirection: "row", marginHorizontal: 24, gap: 12, marginBottom: 16 },
     secondaryStat: { flex: 1, borderRadius: 14, borderWidth: 1, padding: 18, alignItems: "center" },
     secondaryVal: { fontSize: 28, fontWeight: "800" as const, color: "#FFFFFF", letterSpacing: -0.5 },
     secondaryLabel: { fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, marginTop: 4 },
+    stepRow: { alignItems: "center", marginBottom: 24 },
+    stepBox: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: "rgba(255,255,255,0.06)", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 8 },
+    stepVal: { fontSize: 18, fontWeight: "700" as const, color: "#FFFFFF" },
+    stepLabel: { fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: 1, fontWeight: "600" as const },
     controls: { flexDirection: "row", justifyContent: "center", gap: 16, paddingHorizontal: 24 },
     controlBtn: { flex: 1, borderRadius: 20, paddingVertical: 20, alignItems: "center", gap: 8 },
     controlBtnText: { color: "#FFFFFF", fontSize: 14, fontWeight: "700" as const },

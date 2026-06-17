@@ -51,7 +51,8 @@ export default function RunCompleteScreen() {
   async function handleShare() {
     if (!run) return;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const msg = `🏃 Just completed a ${(run.distance / 1000).toFixed(2)}km run!\n⏱ ${formatDuration(run.duration)} | ${formatPace(run.avgPace)}/km pace | ${run.calories} kcal\n🔥 ${extras.streak}-day streak\n\n#RunOS #Running`;
+    const stepText = run.steps ? `\n👟 ${run.steps.toLocaleString()} steps` : "";
+    const msg = `🏃 Just completed a ${(run.distance / 1000).toFixed(2)}km run!\n⏱ ${formatDuration(run.duration)} | ${formatPace(run.avgPace)}/km pace | ${run.calories} kcal${stepText}\n🔥 ${extras.streak}-day streak\n\n#RunOS #Running`;
     Share.share({ message: msg });
   }
 
@@ -121,6 +122,13 @@ export default function RunCompleteScreen() {
           </View>
         </View>
 
+        {run.steps && (
+          <View style={styles.shareCardSteps}>
+            <Feather name="hash" size={14} color="#00C9A7" />
+            <Text style={styles.shareCardStepsText}>{run.steps.toLocaleString()} steps</Text>
+          </View>
+        )}
+
         {extras.streak > 0 && (
           <View style={styles.shareCardStreak}>
             <Feather name="zap" size={14} color="#FF4B2B" />
@@ -154,6 +162,7 @@ export default function RunCompleteScreen() {
             { label: "Avg Pace", value: `${formatPace(run.avgPace)} /km`, icon: "activity" },
             { label: "Calories", value: `${run.calories} kcal`, icon: "zap" },
             { label: "Elevation", value: `+${run.elevationGain}m`, icon: "trending-up" },
+            ...(run.steps ? [{ label: "Steps", value: run.steps.toLocaleString(), icon: "hash" }] : []),
           ].map((item, i, arr) => (
             <View key={i}>
               <View style={styles.detailRow}>
@@ -210,6 +219,8 @@ const makeStyles = (colors: ReturnType<typeof import("@/hooks/useColors").useCol
     shareCardStatVal: { fontSize: 18, fontWeight: "800" as const, color: "#FFFFFF", letterSpacing: -0.3 },
     shareCardStatLabel: { fontSize: 9, color: "rgba(255,255,255,0.4)", letterSpacing: 1.5, marginTop: 4 },
     shareCardDivider: { width: 1, height: 32, backgroundColor: "rgba(255,255,255,0.1)" },
+    shareCardSteps: { flexDirection: "row", alignItems: "center", gap: 6, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.08)", paddingTop: 12, marginBottom: 8 },
+    shareCardStepsText: { fontSize: 13, color: "#00C9A7", fontWeight: "700" as const },
     shareCardStreak: { flexDirection: "row", alignItems: "center", gap: 6, borderTopWidth: 1, borderTopColor: "rgba(255,255,255,0.08)", paddingTop: 14 },
     shareCardStreakText: { fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: "600" as const },
     section: { paddingHorizontal: 16, marginBottom: 16 },

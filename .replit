@@ -28,5 +28,18 @@ localPort = 8081
 externalPort = 80
 
 [[ports]]
+localPort = 8082
+externalPort = 3001
+
+[[ports]]
 localPort = 8099
 externalPort = 8099
+
+[userenv]
+
+[userenv.shared]
+EXPO_PUBLIC_SUPABASE_URL = "https://zpyzulhbbnmvmqoefaqn.supabase.co"
+EXPO_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable__u0TM4saC-qHht0pHHVmwg_xpjIUvJE"
+
+[nix]
+channel = "stable-25_05"

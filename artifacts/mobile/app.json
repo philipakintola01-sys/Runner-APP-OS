@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "RunOS",
-    "slug": "mobile",
+    "slug": "runnerarc",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "runnerarc",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -14,10 +14,12 @@
       "backgroundColor": "#0A0A0F"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.runnerarc.app"
     },
     "android": {
-      "backgroundColor": "#0A0A0F"
+      "backgroundColor": "#0A0A0F",
+      "package": "com.runnerarc.app"
     },
     "web": {
       "favicon": "./assets/images/icon.png"

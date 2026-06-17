@@ -34,7 +34,7 @@ import {
 export default function DashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { runs, isLoaded } = useRunStore();
+  const { runs, isLoaded, syncRuns, isSyncing, syncError } = useRunStore();
 
   const stats = useMemo(() => {
     const streak = calculateStreak(runs);
@@ -67,11 +67,17 @@ export default function DashboardScreen() {
         <View>
           <Text style={styles.greeting}>RunOS</Text>
           <Text style={styles.date}>{formatDate(Date.now())}</Text>
+          {syncError && <Text style={styles.syncError}>{syncError}</Text>}
         </View>
-        <Pressable style={styles.startBtn} onPress={() => router.push("/(tabs)/run")}>
-          <Feather name="play" size={16} color={colors.primaryForeground} />
-          <Text style={styles.startBtnText}>Run</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable style={styles.syncBtn} onPress={syncRuns} disabled={isSyncing}>
+            <Feather name={isSyncing ? "loader" : "cloud"} size={16} color={isSyncing ? colors.primary : colors.primary} />
+          </Pressable>
+          <Pressable style={styles.startBtn} onPress={() => router.push("/(tabs)/run")}>
+            <Feather name="play" size={16} color={colors.primaryForeground} />
+            <Text style={styles.startBtnText}>Run</Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Streak Card */}
@@ -182,6 +188,9 @@ function makeStyles(colors: ReturnType<typeof import("@/hooks/useColors").useCol
     header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", paddingHorizontal: 20, paddingBottom: 16 },
     greeting: { fontSize: 28, fontWeight: "800" as const, color: colors.foreground, letterSpacing: -0.5 },
     date: { fontSize: 13, color: colors.mutedForeground, marginTop: 2 },
+    headerActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+    syncBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,75,43,0.12)", alignItems: "center", justifyContent: "center" },
+    syncError: { fontSize: 11, color: colors.destructive, marginTop: 2 },
     startBtn: { flexDirection: "row", alignItems: "center", backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 24, gap: 6 },
     startBtnText: { color: colors.primaryForeground, fontWeight: "700" as const, fontSize: 14 },
     streakCard: { marginHorizontal: 16, borderRadius: colors.radius, padding: 20, marginBottom: 12 },
