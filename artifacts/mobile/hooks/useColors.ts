@@ -14,12 +14,11 @@ import colors from "@/constants/colors";
  * key, this hook will automatically switch palettes based on the
  * device's appearance setting.
  */
-type Palette = typeof colors.light;
-type ColorsWithDark = { light: Palette; dark: Palette; radius: number };
-
 export function useColors() {
   const scheme = useColorScheme();
-  const c = colors as unknown as ColorsWithDark;
-  const palette = scheme === "dark" && c.dark ? c.dark : c.light;
+  const palette =
+    scheme === "dark" && "dark" in colors
+      ? (colors as Record<string, typeof colors.light>).dark
+      : colors.light;
   return { ...palette, radius: colors.radius };
 }
